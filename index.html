@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self Assessment Wirausaha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Custom radio button styling */
+        .radio-label input[type="radio"]:checked + span {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-container { width: 100%; max-width: 100%; padding: 0; box-shadow: none; }
+            canvas { max-width: 500px !important; margin: 0 auto; }
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased py-8 px-4">
+
+    <!-- Container Utama -->
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden print-container">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 text-white p-8 text-center">
+            <h1 class="text-3xl font-bold mb-2">Asesmen Mandiri Wirausaha</h1>
+            <p class="text-blue-100 max-w-2xl mx-auto">Evaluasi profil kewirausahaan Anda melalui 30 pertanyaan berikut. Temukan kekuatan, kelemahan, dan area yang perlu Anda tingkatkan untuk mengembangkan bisnis Anda.</p>
+        </div>
+
+        <!-- Section Form -->
+        <div id="form-section" class="p-8">
+            <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <h3 class="font-semibold text-blue-800 mb-2">Petunjuk Pengisian:</h3>
+                <p class="text-sm text-gray-700 mb-3">Pilihlah skala 1 hingga 5 yang paling sesuai dengan diri Anda saat ini:</p>
+                <div class="flex flex-wrap gap-4 text-sm font-medium">
+                    <span class="flex items-center"><div class="w-6 h-6 rounded bg-gray-200 text-center mr-2">1</div> Sangat Kurang</span>
+                    <span class="flex items-center"><div class="w-6 h-6 rounded bg-gray-200 text-center mr-2">2</div> Kurang</span>
+                    <span class="flex items-center"><div class="w-6 h-6 rounded bg-gray-200 text-center mr-2">3</div> Cukup</span>
+                    <span class="flex items-center"><div class="w-6 h-6 rounded bg-gray-200 text-center mr-2">4</div> Baik</span>
+                    <span class="flex items-center"><div class="w-6 h-6 rounded bg-gray-200 text-center mr-2">5</div> Sangat Baik</span>
+                </div>
+            </div>
+
+            <form id="assessment-form">
+                <!-- Pertanyaan akan di-generate oleh JavaScript di sini -->
+                <div id="questions-container" class="space-y-10"></div>
+                
+                <div class="mt-10 pt-6 border-t border-gray-200 text-center">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-300 w-full md:w-auto">
+                        Lihat Hasil Asesmen
+                    </button>
+                    <p id="error-message" class="text-red-500 text-sm mt-3 hidden">Mohon jawab seluruh pertanyaan sebelum melanjutkan.</p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Section Hasil (Awalnya Disembunyikan) -->
+        <div id="result-section" class="p-8 hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Laporan Hasil Asesmen</h2>
+                <p class="text-gray-600">Berikut adalah profil kapasitas kewirausahaan Anda.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 items-center">
+                <!-- Grafik Jejaring -->
+                <div class="relative w-full aspect-square md:aspect-auto md:h-80 flex justify-center">
+                    <canvas id="radarChart"></canvas>
+                </div>
+
+                <!-- Skor Rata-rata -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4 text-gray-700 border-b pb-2">Skor per Dimensi</h3>
+                    <ul id="score-list" class="space-y-3">
+                        <!-- List skor di-generate oleh JS -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <!-- Analisis Detail -->
+            <div class="space-y-6">
+                <!-- Kekuatan -->
+                <div class="bg-green-50 rounded-lg p-6 border border-green-200">
+                    <div class="flex items-center mb-3">
+                        <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3 class="text-xl font-bold text-green-800">Kekuatan (Skor ≥ 4.0)</h3>
+                    </div>
+                    <p class="text-sm text-green-700 mb-3">Dimensi yang sudah sangat baik dan menjadi pilar keunggulan Anda. Pertahankan dan manfaatkan untuk ekspansi.</p>
+                    <ul id="strengths-list" class="list-disc list-inside text-gray-800 font-medium space-y-1"></ul>
+                </div>
+
+                <!-- Perlu Ditingkatkan -->
+                <div class="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+                    <div class="flex items-center mb-3">
+                        <svg class="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <h3 class="text-xl font-bold text-yellow-800">Perlu Ditingkatkan (Skor 3.0 - 3.9)</h3>
+                    </div>
+                    <p class="text-sm text-yellow-700 mb-3">Dimensi ini sudah cukup memadai, namun butuh optimalisasi agar tidak menghambat pertumbuhan bisnis.</p>
+                    <ul id="improvements-list" class="list-disc list-inside text-gray-800 font-medium space-y-1"></ul>
+                </div>
+
+                <!-- Kelemahan -->
+                <div class="bg-red-50 rounded-lg p-6 border border-red-200">
+                    <div class="flex items-center mb-3">
+                        <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <h3 class="text-xl font-bold text-red-800">Kelemahan & Risiko (Skor < 3.0)</h3>
+                    </div>
+                    <p class="text-sm text-red-700 mb-3">Area kritis yang membutuhkan perhatian segera. Segera cari pelatihan, mentor, atau delegasikan ke ahlinya.</p>
+                    <ul id="weaknesses-list" class="list-disc list-inside text-gray-800 font-medium space-y-1"></ul>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4 no-print border-t pt-8">
+                <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-6 rounded-lg transition">
+                    Cetak Hasil (PDF)
+                </button>
+                <button onclick="resetAssessment()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold py-2 px-6 rounded-lg transition">
+                    Ulangi Asesmen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const assessmentData = [
+            {
+                dimension: "Kepemimpinan",
+                questions: [
+                    "Saya mampu memotivasi tim atau karyawan untuk mencapai target perusahaan.",
+                    "Saya memiliki visi jangka panjang yang jelas untuk arah bisnis saya.",
+                    "Saya dapat mengambil keputusan yang tegas dan cepat dalam situasi krisis.",
+                    "Saya mendelegasikan tugas kepada orang yang tepat secara efektif.",
+                    "Saya terbuka menerima kritik dan masukan dari anggota tim maupun pelanggan."
+                ]
+            },
+            {
+                dimension: "Inovasi & Kreativitas",
+                questions: [
+                    "Saya terus mencari cara baru untuk meningkatkan kualitas produk/layanan.",
+                    "Saya mendorong ide-ide baru dan berani melakukan eksperimen dalam bisnis.",
+                    "Saya cepat beradaptasi dengan perubahan tren pasar dan teknologi baru.",
+                    "Saya mampu melihat peluang bisnis di saat orang lain melihatnya sebagai masalah.",
+                    "Saya rutin meluncurkan pembaruan, produk baru, atau cara kerja yang inovatif."
+                ]
+            },
+            {
+                dimension: "Manajemen Risiko",
+                questions: [
+                    "Saya menganalisis potensi risiko sebelum mengambil keputusan bisnis yang besar.",
+                    "Saya selalu menyiapkan rencana cadangan (Plan B) jika rencana utama gagal.",
+                    "Saya mengambil risiko secara terukur tanpa rasa takut yang menghambat kemajuan.",
+                    "Saya melindungi aset penting (asuransi/tabungan darurat) untuk mengamankan bisnis.",
+                    "Saya mengevaluasi kegagalan di masa lalu untuk mencegah kesalahan yang sama."
+                ]
+            },
+            {
+                dimension: "Orientasi Pasar",
+                questions: [
+                    "Saya sangat memahami kebutuhan spesifik dan masalah yang dihadapi pelanggan saya.",
+                    "Saya secara rutin meminta dan mencatat feedback (umpan balik) dari pelanggan.",
+                    "Saya memantau strategi, harga, dan pergerakan kompetitor secara berkala.",
+                    "Saya selalu menyesuaikan strategi promosi/pemasaran berdasarkan respon pasar.",
+                    "Saya menempatkan kepuasan dan loyalitas pelanggan sebagai prioritas utama."
+                ]
+            },
+            {
+                dimension: "Manajemen Keuangan",
+                questions: [
+                    "Saya memisahkan rekening pribadi dan rekening bisnis secara ketat.",
+                    "Saya rutin mencatat dan memantau arus kas (pemasukan & pengeluaran) setiap bulan.",
+                    "Saya memahami cara menghitung Harga Pokok Penjualan (HPP) dan margin keuntungan.",
+                    "Saya memiliki target keuangan yang terukur dan memantaunya secara berkala.",
+                    "Saya bijak dalam mengambil dan mengelola utang agar tidak membebani arus kas."
+                ]
+            },
+            {
+                dimension: "Daya Juang & Resiliensi",
+                questions: [
+                    "Saya tidak mudah menyerah saat menghadapi penolakan, komplain, atau kegagalan.",
+                    "Saya mampu mengelola stres dan menjaga stabilitas emosi di tengah tekanan bisnis.",
+                    "Saya memandang tantangan dan krisis sebagai peluang untuk belajar dan tumbuh.",
+                    "Saya konsisten dan fokus pada tujuan jangka panjang meskipun banyak rintangan.",
+                    "Saya memiliki komitmen dan disiplin tinggi untuk menyelesaikan apa yang sudah saya mulai."
+                ]
+            }
+        ];
+
+        let radarChartInstance = null;
+
+        // Render Questions
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+            
+            let questionCounter = 1;
+
+            assessmentData.forEach((section, sIndex) => {
+                // Section Header
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = "bg-white p-6 rounded-xl border border-gray-100 shadow-sm";
+                
+                const sectionTitle = document.createElement('h2');
+                sectionTitle.className = "text-xl font-bold text-gray-800 border-b pb-2 mb-6 flex justify-between";
+                sectionTitle.innerHTML = `<span>Bagian ${sIndex + 1}: ${section.dimension}</span>`;
+                sectionDiv.appendChild(sectionTitle);
+
+                // Questions
+                section.questions.forEach((qText, qIndex) => {
+                    const qId = `q_${sIndex}_${qIndex}`;
+                    
+                    const qContainer = document.createElement('div');
+                    qContainer.className = "mb-6 last:mb-0";
+                    
+                    const qLabel = document.createElement('p');
+                    qLabel.className = "text-gray-700 font-medium mb-3";
+                    qLabel.innerText = `${questionCounter}. ${qText}`;
+                    
+                    const optionsContainer = document.createElement('div');
+                    optionsContainer.className = "flex gap-2 sm:gap-4 flex-wrap";
+
+                    // 1 to 5 radio buttons
+                    for (let i = 1; i <= 5; i++) {
+                        const label = document.createElement('label');
+                        label.className = "radio-label cursor-pointer";
+                        
+                        const input = document.createElement('input');
+                        input.type = "radio";
+                        input.name = qId;
+                        input.value = i;
+                        input.required = true;
+                        input.className = "hidden"; // Hide default radio
+                        
+                        const span = document.createElement('span');
+                        span.className = "inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border border-gray-300 bg-white text-gray-600 font-semibold hover:bg-blue-50 transition-colors";
+                        span.innerText = i;
+                        
+                        label.appendChild(input);
+                        label.appendChild(span);
+                        optionsContainer.appendChild(label);
+                    }
+
+                    qContainer.appendChild(qLabel);
+                    qContainer.appendChild(optionsContainer);
+                    sectionDiv.appendChild(qContainer);
+                    
+                    questionCounter++;
+                });
+
+                container.appendChild(sectionDiv);
+            });
+        }
+
+        // Form Submit Handler
+        document.getElementById('assessment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const results = [];
+            const dimensionScores = [];
+            const labels = [];
+
+            // Calculate scores
+            assessmentData.forEach((section, sIndex) => {
+                let sum = 0;
+                section.questions.forEach((_, qIndex) => {
+                    const val = parseInt(formData.get(`q_${sIndex}_${qIndex}`));
+                    sum += val;
+                });
+                const average = (sum / 5).toFixed(2);
+                dimensionScores.push(parseFloat(average));
+                labels.push(section.dimension);
+                
+                results.push({
+                    dimension: section.dimension,
+                    score: parseFloat(average)
+                });
+            });
+
+            showResults(labels, dimensionScores, results);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Display Results and Chart
+        function showResults(labels, data, resultsObj) {
+            document.getElementById('form-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+
+            // Render Chart
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Skor Kapasitas',
+                        data: data,
+                        backgroundColor: 'rgba(37, 99, 235, 0.2)', // Blue
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: {
+                                font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                                color: '#374151'
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                min: 0,
+                                max: 5,
+                                stepSize: 1,
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Render Score List
+            const scoreList = document.getElementById('score-list');
+            scoreList.innerHTML = '';
+            resultsObj.forEach(item => {
+                let badgeClass = item.score >= 4 ? 'bg-green-100 text-green-800' : (item.score >= 3 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800');
+                
+                scoreList.innerHTML += `
+                    <li class="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
+                        <span class="font-medium text-gray-700">${item.dimension}</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-bold ${badgeClass}">${item.score.toFixed(1)} / 5.0</span>
+                    </li>
+                `;
+            });
+
+            // Categorize Analysis
+            const strengths = resultsObj.filter(item => item.score >= 4.0);
+            const improvements = resultsObj.filter(item => item.score >= 3.0 && item.score < 4.0);
+            const weaknesses = resultsObj.filter(item => item.score < 3.0);
+
+            // Populate Lists
+            const renderList = (elementId, array, emptyMsg) => {
+                const el = document.getElementById(elementId);
+                if (array.length === 0) {
+                    el.innerHTML = `<li class="text-gray-500 italic text-sm">${emptyMsg}</li>`;
+                } else {
+                    el.innerHTML = array.map(item => `<li>${item.dimension} <span class="text-xs font-bold text-gray-500 ml-1">(${item.score.toFixed(1)})</span></li>`).join('');
+                }
+            }
+
+            renderList('strengths-list', strengths, "Belum ada dimensi yang mencapai skor kekuatan optimal (≥ 4.0). Terus tingkatkan kapasitas Anda.");
+            renderList('improvements-list', improvements, "Tidak ada dimensi di rentang ini.");
+            renderList('weaknesses-list', weaknesses, "Luar biasa! Tidak ada kelemahan kritis (skor < 3.0) dalam profil Anda.");
+        }
+
+        // Reset App
+        function resetAssessment() {
+            document.getElementById('assessment-form').reset();
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('form-section').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', renderQuestions);
+
+    </script>
+</body>
+</html>
